@@ -1,6 +1,5 @@
 import RPi.GPIO as GPIO
 import time
-GPIO.setmode(GPIO.BCM)
 
 class Motor(object):
     def __init__(self, forward_pin, backward_pin, speed=0.0, frequency=1000, invert=False):
@@ -38,29 +37,4 @@ class Motor(object):
     
     def set_inverted(self, invert):
         self.invert = invert
-        
-class Servo(object):
-    def __init__(self, pin, min_value = 2.2, max_value = 11.8, frequency=50):
-        self.pin = pin
-        self.frequency = frequency
-        self.min_value = min_value
-        self.max_value = max_value
-        
-        GPIO.setup(pin, GPIO.OUT)
-        self.pwm = GPIO.PWM(pin, frequency)
-	self.pwm.start(0)
-
-    def set(self, angle):
-	self.set_angle(angle)
-    def set_angle(self, angle):
-        pwm_angle = (angle/180.0) * (self.max_value-self.min_value)/2.0
-        pwm_angle += (self.max_value + self.min_value)/2
-        self.pwm.ChangeDutyCycle(pwm_angle)
     
-if __name__ == "__main__":
-    #motor = Motor(12,13)
-    servo = Servo(18)
-    while True:
-        for i in range(-180, 180):
-            servo.set(i)
-	    time.sleep(0.02)
