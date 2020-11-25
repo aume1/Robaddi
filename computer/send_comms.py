@@ -3,7 +3,7 @@
 """
 Created on Thu Oct 29 16:39:33 2020
 
-@author: Cameron AUme
+@author: Cameron Aume
 """
 
 # All necessary imports
