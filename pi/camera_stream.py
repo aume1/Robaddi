@@ -1,3 +1,4 @@
+# necessary imports
 import io
 import picamera
 import logging
@@ -19,6 +20,7 @@ PAGE="""\
 </html>
 """
 #output = None
+# setup the streaming output class
 class StreamingOutput(object):
     def __init__(self):
         self.frame = None
@@ -36,6 +38,7 @@ class StreamingOutput(object):
             self.buffer.seek(0)
         return self.buffer.write(buf)
 
+# set up the webserver class
 class StreamingHandler(server.BaseHTTPRequestHandler):
     global output
     def do_GET(self):
@@ -80,14 +83,14 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+# setup the camera and start streaming it
 class Camera():
     def camera_server(self):
         global output
         camera = picamera.PiCamera(resolution='320x240', framerate=30)
         print('starting camera')
-        #with picamera.PiCamera(resolution='320x240', framerate=30) as camera:
         output = StreamingOutput()
-        #Uncomment the next line to change your Pi's Camera rotation (in degrees)
+        # change your Pi's Camera rotation (in degrees)
         camera.rotation = 180
         camera.start_recording(output, format='mjpeg')
         
@@ -98,4 +101,3 @@ class Camera():
         finally:
             camera.stop_recording()
                 
-#Camera.camera_server()

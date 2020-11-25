@@ -1,37 +1,37 @@
+# necessary imports
 import socket
 import logging
 import threading
 import time
 import RPi.GPIO as GPIO
-
 import camera_stream
 
+# setup the pins to use the BCM mode and disable GPIO warnings
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-
 
 message = ""
 distance = 0.0
 speed = 0
-ultra_trig = 22
-ultra_echo = 23
+ultra_trig = 22 # ultrasonic trigger pin number
+ultra_echo = 23 # ultrasonic echo pin number
 
 # Drive pin setups
-GPIO.setup(18, GPIO.OUT)
+GPIO.setup(18, GPIO.OUT) # setup the forward drive motor (pin 18)
 fpwm = GPIO.PWM(18, 50)
 fpwm.start(0)
-GPIO.setup(17, GPIO.OUT)
+GPIO.setup(17, GPIO.OUT) # setup the backward drive motor (pin 17)
 bpwm = GPIO.PWM(17, 50)
 bpwm.start(0)
 
 # Servo setup
-GPIO.setup(24, GPIO.OUT)
+GPIO.setup(24, GPIO.OUT) # setup the servo motor (pin 24)
 servo = GPIO.PWM(24, 50)
 angle = 150
 servo.start(angle/18 + 2)
         
         
-
+# main thread (interpreting messages, driving, steering)
 def thread_function(name):
     global message, distance, speed, angle
     time.sleep(2)
@@ -51,6 +51,8 @@ def thread_function(name):
         message = ""
         time.sleep(0.1)
 
+
+# ultrasonic sensor thread
 def ultrasonic_distance(name):
     global ultra_trig, ultra_echo, distance
     GPIO.setup(ultra_trig, GPIO.OUT)
@@ -78,7 +80,8 @@ def ultrasonic_distance(name):
         
         time.sleep(0.06)
     
-    
+
+# UPD thread (message handling)
 def UDP_Thread(name):
     global message
     UDP_IP = socket.gethostbyname('raspberrypi.local')
@@ -94,6 +97,8 @@ def UDP_Thread(name):
         message = data.decode('utf-8')
         print("received message: %s" % data)
 
+
+# drive the robot with a given speed
 def drive(speed):
     global distance, fpwm, bpwm
     print('driving with speed {} and distance {}'.format(speed, distance))
@@ -113,6 +118,8 @@ def drive(speed):
         bpwm.ChangeDutyCycle(0)
         #print('not driving!')
 
+
+# steer the robot with a given angle
 def steer(angle):
     global servo
     if angle < 125:
@@ -122,21 +129,22 @@ def steer(angle):
     duty = angle / 18 + 2
     servo.ChangeDutyCycle(duty)
 
+
 if __name__ == "__main__":
     format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO,
                         datefmt="%H:%M:%S")
 
     
-    x = threading.Thread(target=thread_function, args=(1,))
+    x = threading.Thread(target=thread_function, args=(1,)) # start main thread
     x.start()
-    comms = threading.Thread(target=UDP_Thread, args=(2,))
+    comms = threading.Thread(target=UDP_Thread, args=(2,)) # start communication thread
     comms.start()
     
-    ultra = threading.Thread(target=ultrasonic_distance, args=(3,))
+    ultra = threading.Thread(target=ultrasonic_distance, args=(3,)) # start ultrasonic thread
     ultra.start()
 
-    cam = threading.Thread(target=camera_stream.Camera.camera_server, args=(4,))
+    cam = threading.Thread(target=camera_stream.Camera.camera_server, args=(4,)) # start camera thread
     cam.start()
     
     print('threads started')
